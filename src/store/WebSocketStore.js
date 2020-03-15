@@ -1,0 +1,148 @@
+import Vue from 'vue';
+import Vuex from 'vuex';
+import MessageData from "@/data/MessageData";
+
+Vue.use(Vuex);
+
+export default new Vuex.Store({
+    state: {
+        websocket: null,
+        eventList: [],
+    },
+    getters: {
+        onEvent(state) {
+            return function (method) {
+                let index = state.eventList.map((T) => {
+                    return T.method
+                }).indexOf(method);
+                if (state.eventList.length > 0 && index >= 0) {
+                    // 将该event拷贝为一个对象返回
+                    let result = Object.assign({}, state.eventList[index]);
+                    // 删除
+                    state.eventList.splice(index, 1);
+                    return result.data;
+                }
+                return null;
+            }
+        },
+    },
+    mutations: {
+        // websocket 初始化
+        WS_INIT(state, url) {
+            if (!window.WebSocket) {
+                window.WebSocket = window.MozWebSocket;
+            }
+            if (window.WebSocket) {
+                if (!state.websocket) {
+                    state.websocke = new WebSocket(url);
+                }
+                state.websocke.onopen = function () {
+                    console.log("打开 WebSocket 服务正常，浏览器支持 WebSocket!");
+                    // 发送心跳包
+                    sendPing(this);
+                    // 发送登录信息
+                    sendLogin(this);
+                };
+                state.websocke.onmessage = function (event) {
+                    let data = JSON.parse(event.data);
+                    if (data.header.msgType === "PANG") {
+                        // ping 返回 25S定时
+                        let sc = this;
+                        setInterval(function () {
+                            console.log("客户端发送心跳！");
+                            sendPing(sc);
+                        }, 25000);
+                    } else {
+                        state.eventList.push({
+                            method: 'RECEIVED_DATA',
+                            data: data
+                        });
+                    }
+                };
+                state.websocke.onerror = function (err) {
+                    state.websocket.close();
+                    console.log(err);
+                };
+                state.websocke.onclose = function () {
+                    console.log("WebSocket关闭");
+                };
+            } else {
+                console.log("抱歉，您的浏览器不支持 WebSocket 协议！");
+            }
+        },
+        WS_SEND_CHAT(state, {receiverId, data}) {
+            if (!window.WebSocket) {
+                return;
+            }
+            let chat = {
+                header: {
+                    msgType: "CHAT",
+                    priority: 0
+                },
+                data: data,
+                sendTime: new Date(),
+                sendId: MessageData.getMyId(),
+                receiverId: receiverId,
+                signed: false
+            };
+
+            console.log(chat);
+            if (state.websocket.readyState === WebSocket.OPEN) {
+                state.websocket.send(JSON.stringify(chat));
+            } else {
+                alert("WebSocket 连接没有建立成功！");
+            }
+        }
+
+    },
+    actions: {
+        WS_INIT({commit}, url) {
+            commit('WS_INIT', url);
+        },
+        WS_SEND_CHAT({commit}, {receiverId, data}) {
+            commit('WS_SEND_CHAT', {receiverId, data})
+        }
+    }
+})
+
+// 发送消息
+function send(socket, message) {
+    if (!window.WebSocket) {
+        return;
+    }
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(message);
+    } else {
+        alert("WebSocket 连接没有建立成功！");
+    }
+}
+
+// 发送心跳信号
+function sendPing(socket) {
+    let ping = {
+        header: {
+            id: -1,
+            msgType: "PING",
+            priority: 0
+        },
+        data: "PING",
+        sendTime: new Date(),
+        sendId: MessageData.getMyId(),
+        crcCode: 0xEF6ED,
+    };
+    send(socket, JSON.stringify(ping));
+}
+
+// 发送登录信号
+function sendLogin(socket) {
+    let login = {
+        header: {
+            id: -1,
+            msgType: "LOGIN",
+            priority: 0
+        },
+        data: "LOGIN",
+        sendId: MessageData.getMyId()
+    };
+    send(socket, JSON.stringify(login));
+}
