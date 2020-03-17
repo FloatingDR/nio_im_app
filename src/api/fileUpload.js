@@ -1,16 +1,31 @@
-import {SERVER_BASE, http_file} from "@/api/config";
+import {request} from '@/api/request';
+import {Upload, UploadFile} from "@/api/urls";
 
 export default {
     // 原图+压缩图
     uploadFile(userId, file) {
         let params = new FormData();
         params.append('file', file.file);
-        return http_file.post(SERVER_BASE + `/file/uploadHeaderImg/${userId}`, params);
+        return request({
+            url: UploadFile + `/${userId}`,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            method: 'POST',
+            data: params,
+        });
     },
     // 原图
     upload(userId, file) {
         let params = new FormData();
         params.append('file', file.file);
-        return http_file.post(SERVER_BASE + `/file/upload/${userId}`, params);
+        return request({
+            url: Upload,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            method: `/${userId}`,
+            data: params
+        });
     }
 }

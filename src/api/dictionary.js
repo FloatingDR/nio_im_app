@@ -1,7 +1,11 @@
-import {SERVER_BASE, http} from "@/api/config";
+import {request} from '@/api/request';
+import {GetAreaList} from "@/api/urls";
 
 export default {
     getAreaList() {
-        return http.get(SERVER_BASE + `/dictionary/getAreaList`);
+        return request({
+            url: GetAreaList,
+            method: 'GET',
+        });
     },
 }

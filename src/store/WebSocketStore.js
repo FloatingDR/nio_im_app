@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import MessageData from "@/data/MessageData";
+import CACHE from "@/api/cache";
 
 Vue.use(Vuex);
 
@@ -34,16 +34,16 @@ export default new Vuex.Store({
             }
             if (window.WebSocket) {
                 if (!state.websocket) {
-                    state.websocke = new WebSocket(url);
+                    state.websocket = new WebSocket(url);
                 }
-                state.websocke.onopen = function () {
+                state.websocket.onopen = function () {
                     console.log("打开 WebSocket 服务正常，浏览器支持 WebSocket!");
                     // 发送心跳包
                     sendPing(this);
                     // 发送登录信息
                     sendLogin(this);
                 };
-                state.websocke.onmessage = function (event) {
+                state.websocket.onmessage = function (event) {
                     let data = JSON.parse(event.data);
                     if (data.header.msgType === "PANG") {
                         // ping 返回 25S定时
@@ -59,11 +59,11 @@ export default new Vuex.Store({
                         });
                     }
                 };
-                state.websocke.onerror = function (err) {
+                state.websocket.onerror = function (err) {
                     state.websocket.close();
                     console.log(err);
                 };
-                state.websocke.onclose = function () {
+                state.websocket.onclose = function () {
                     console.log("WebSocket关闭");
                 };
             } else {
@@ -81,7 +81,7 @@ export default new Vuex.Store({
                 },
                 data: data,
                 sendTime: new Date(),
-                sendId: MessageData.getMyId(),
+                sendId: CACHE.getMyId(),
                 receiverId: receiverId,
                 signed: false
             };
@@ -127,7 +127,7 @@ function sendPing(socket) {
         },
         data: "PING",
         sendTime: new Date(),
-        sendId: MessageData.getMyId(),
+        sendId: CACHE.getMyId(),
         crcCode: 0xEF6ED,
     };
     send(socket, JSON.stringify(ping));
@@ -142,7 +142,7 @@ function sendLogin(socket) {
             priority: 0
         },
         data: "LOGIN",
-        sendId: MessageData.getMyId()
+        sendId: CACHE.getMyId()
     };
     send(socket, JSON.stringify(login));
 }

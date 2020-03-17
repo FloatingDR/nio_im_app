@@ -1,12 +1,21 @@
-import {SERVER_BASE, http} from "@/api/config";
+import {request} from '@/api/request';
+import {GetUserById, UpdateUserInfo} from "@/api/urls";
 
 export default {
     // 根据id获取用户信息
     getUserById(userId) {
-        return http.get(SERVER_BASE + `/user/getById/${userId}`);
+        return request({
+            url: GetUserById + `/${userId}`,
+            method: 'GET',
+        })
     },
     // 更新用户信息
     updateUserInfo(userId, user) {
-        return http.put(SERVER_BASE + `/user/update/${userId}`, user);
-    },
+        return request({
+            url: UpdateUserInfo + `/${userId}`,
+            method: 'PUT',
+            data: user
+        })
+    }
+
 }

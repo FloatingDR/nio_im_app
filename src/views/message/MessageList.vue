@@ -16,7 +16,7 @@
 
             <!--  消息列表-->
             <van-cell class="van_cell" v-for="item in list" :key="item.index"
-                      @click="toChatPage(item.id,item.type)">
+                      @click="toChatPage(item.sendId,item.type)">
                 <van-swipe-cell :before-close="beforeClose">
                     <!--  message list-->
                     <van-image
@@ -36,8 +36,9 @@
                         </div>
                         <div>
                             <span style="color: #a3a3a3;font-size: .35rem">{{item.msg}}</span>
-                            <div v-if="item.count>0 && !item.singed" style="float:right;width:.4rem;height:.4rem;border-radius:.2rem;
-                            background-color: crimson;line-height: .4rem;color: white;text-align: center;margin-right: .4rem">
+                            <div v-if="item.count > 0 " style="float:right;width:.5rem;height:.5rem;border-radius:.25rem;
+                            background-color: crimson;line-height: .5rem;color: white;text-align: center;margin-right: .4rem;
+                            font-size: .1rem">
                                 {{item.count}}
                             </div>
                         </div>
@@ -56,19 +57,8 @@
 
 <script>
     import {mapActions} from "vuex";
-    import USER from "@/api/user";
-    import GROUP from "@/api/group";
-    import MsgList from "@/data/MsgList";
-
-    function isExist(arr, id, type) {
-        for (let i = 0; i < arr.length; i++) {
-            let da = arr[i];
-            if (da.id === id && da.type === type) {
-                return i;
-            }
-        }
-        return -1;
-    }
+    import MESSAGE from "@/api/Message";
+    import CACHE from "@/api/cache";
 
     export default {
         name: "MessageList",
@@ -85,7 +75,13 @@
                 height: "1.2rem",
                 list: [
                     // {
-                    //     singed:false,
+                    //     sendId,
+                    //     img,
+                    //     tag,
+                    //     type,
+                    //     count,
+                    //     msg,
+                    //     index
                     // }
                 ],
 
@@ -99,66 +95,26 @@
              */
             loadList() {
                 let that = this;
-                let arr = MsgList.get();
-                let target = [];
-                if (arr && arr.length > 0) {
-                    for (let i = 0; i < arr.length; i++) {
-                        let data = arr[i];
-                        data.count = 1;
-                        let indexOfEx = isExist(target, data.id, data.type);
-                        if (indexOfEx >= 0) {
-                            if (!data.singed || !target[indexOfEx].singed) {
-                                data.count++;
-                                target[indexOfEx].count++;
-                            }
-                            let tar = new Date(target[indexOfEx].time);
-                            let da = new Date(data.time);
-                            if (tar < da) {
-                                target[indexOfEx] = data;
-                            }
-                            continue;
-                        }
-                        target.push(data);
-                    }
-                }
-
-                // 更新缓存，剔除旧数据
-                MsgList.update(target);
-
-                // 拷贝的 target 数据，用于显示，target 用于持久化
-                let string = JSON.stringify(target);
-                this.list = JSON.parse(string);
-
-                let list = this.list;
-                if (list && list.length > 0) {
-                    for (let i = 0; i < list.length; i++) {
-                        let data = list[i];
-                        if (data.type === 'CHAT') {
-                            USER.getUserById(data.id).then(function (resp) {
-                                if (resp.data.status) {
-                                    data.img = resp.data.data.imgReduce;
-                                    data.tag = resp.data.data.nickname;
-                                    that.format(list, i, data);
-                                }
-                            }).catch(err => console.log(err));
-                        } else if (data.type === 'GROUP') {
-                            GROUP.getGroupInfo(data.id).then(function (resp) {
-                                if (resp.data.status) {
-                                    data.img = resp.data.data.groupImg;
-                                    data.tag = resp.data.data.nickname;
-                                    that.format(list, i, data);
-                                }
-                            }).catch(err => console.log(err));
+                let MyId = CACHE.getMyId();
+                MESSAGE.getUnreadList(MyId).then(function (resp) {
+                    if (resp.data.status) {
+                        let cache = resp.data.data;
+                        // 更新缓存
+                        for (let i = 0; i < cache.length; i++) {
+                            let msg = {
+                                index: i,
+                                sendId: cache[i].sendId,
+                                img: cache[i].sendHeaderImg,
+                                tag: cache[i].sendHeaderNickname,
+                                count: cache[i].count,
+                                type: 'CHAT',
+                                time: cache[i].time,
+                                msg: JSON.parse(cache[i].message).data,
+                            };
+                            that.format(that.list, i, msg);
                         }
                     }
-
-                    let length = list.length;
-                    // 设置index
-                    for (let i = 0; i < length; i++) {
-                        list[i].index = i;
-                        that.$set(that.list, i, list[i]);
-                    }
-                }
+                }).catch(err => console.log(err));
             },
             // 格式化数据用于显示
             format(list, index, data) {
@@ -217,10 +173,10 @@
             deleteMsg(index) {
                 console.log("将删除的元素:", index);
                 let list = this.list;
-                let id = list[index].id;
-                let type = list[index].type;
-                MsgList.deleteAll(id, type);
-                list.splice(index, 1);
+                // let id = list[index].id;
+                // let type = list[index].type;
+                // MsgList.deleteAll(id, type);
+                // list.splice(index, 1);
                 // resize
                 this.resize(list);
             }
@@ -270,7 +226,7 @@
                     this.$router.push({path: '/GROUP'});
                     this.SET_CHATTING({id: id, type: 'group'});
                 }
-                this.readList(id);
+                this.readList(id, type);
             }
             ,
             /**
@@ -282,15 +238,15 @@
             /**
              * 已读列表
              * @param id 对方id
+             * @param type 消息类型
              */
-            readList(id) {
-                let target = MsgList.get();
-                for (let i = 0; i < target.length; i++) {
-                    if (target[i].id === id) {
-                        target[i].singed = true;
+            readList(id, type) {
+                let myId = CACHE.getMyId();
+                MESSAGE.read_batch_by_sendIdAndType(myId, id, type).then(function (resp) {
+                    if (resp.data.status) {
+                        console.log(resp.data.message);
                     }
-                }
-                MsgList.update(target);
+                }).catch(err => console.log(err));
             }
 
         },
@@ -300,7 +256,6 @@
         ,
         mounted() {
             this.resize(this.list);
-            // MsgList.deleteAll()
         },
         computed: {
             onActive() {

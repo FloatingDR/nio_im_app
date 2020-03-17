@@ -70,6 +70,7 @@ export default new Vuex.Store({
         LoginAction({commit}, user) {
             commit('CACHE', user);
             commit('Set_LoginState', true);
+            sessionStorage.setItem('Authorization', user.userId);
         },
         // 退出登录的时候，清理缓存
         LogoutAction({commit}) {
