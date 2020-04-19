@@ -2,7 +2,7 @@ import axios from 'axios';
 import router from "@/router";
 import {Notify} from 'vant';
 
-const baseURL = 'http://192.168.0.103:8080';
+const baseURL = 'API';
 
 function resolveErrorCode(res) {
     const {status} = res;

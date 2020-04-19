@@ -235,12 +235,18 @@
                     if (resp.data.status) {
                         that.info.imgReduce = resp.data.data.imgReduce;
                         that.info.img = resp.data.data.img;
+                        let data = {
+                            userId: that.info.userId,
+                            imgReduce: that.info.imgReduce,
+                            img: that.info.img
+                        };
+                        that.update(data);
                         // 更新缓存
                         let cache = that.getUserCache();
                         cache.imgReduce = that.info.imgReduce;
                         cache.img = that.info.img;
                         that.LoginAction(cache);
-                    }else{
+                    } else {
                         Toast(resp.data.message);
                     }
                 }).catch(function (err) {
@@ -257,11 +263,16 @@
                     if (resp.data.status) {
                         console.log(resp);
                         that.info.backgroundImg = resp.data.data;
+                        let data = {
+                            userId: that.info.userId,
+                            backgroundImg: that.info.backgroundImg
+                        };
+                        that.update(data);
                         // 更新缓存
                         let cache = that.getUserCache();
                         cache.backgroundImg = that.info.backgroundImg;
                         that.LoginAction(cache);
-                    }else{
+                    } else {
                         Toast(resp.data.message);
                     }
                 }).catch(function (err) {

@@ -20,11 +20,11 @@ export default {
         let params = new FormData();
         params.append('file', file.file);
         return request({
-            url: Upload,
+            url: Upload+`/${userId}`,
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
-            method: `/${userId}`,
+            method: 'POST',
             data: params
         });
     }

@@ -18,6 +18,7 @@
         methods: {
             processData(data) {
                 let type = data.header.msgType;
+                let that = this;
 
                 if (type === "LOGIN") {
                     return;
@@ -30,16 +31,23 @@
                         content: data.data,
                     };
                     // 保存到自己的缓存中， myId和sendId要交换
-                    CACHE.cacheMsg(CACHE.getMyId(), data.sendId, 'CHAT', msg);
+                    CACHE.cacheMsg(CACHE.getMyId(), data.sendId, 'CHAT', msg).then(function (resp) {
+                        if (resp.data.status) {
+                            console.log("已将获取到的消息存入缓存", data);
+                            that.$websocket.state.chatList.push(data);
+                        }
+                    }).catch(err => console.log(err));
                 } else if (type === 'GROUP') {
                     console.log(data);
 
                 }
-
+            },
+            initWS() {
+                this.$websocket.dispatch('WS_INIT');
             }
         },
         mounted() {
-            this.$websocket.dispatch('WS_INIT', "ws://localhost:8081/websocket")
+            this.initWS();
         },
         computed: {
             setEvent() {
@@ -50,7 +58,6 @@
             setEvent(a, b) {
                 if (a !== b && a) {
                     this.processData(a);
-
                 }
             },
             // eslint-disable-next-line no-unused-vars

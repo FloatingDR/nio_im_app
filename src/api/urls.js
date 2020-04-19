@@ -1,6 +1,10 @@
+// websocket
+export const WS_URL = 'ws://localhost:8081/websocket';
 // user
 export const GetUserById = `/user/getById`;
 export const UpdateUserInfo = `/user/update`;
+export const Login = `/user/login`;
+export const Register = `/user/register`;
 
 // cache
 export const GetCache = `/user_cache/get_cache`;
@@ -21,3 +25,9 @@ export const GetGroupInfo = `/group/get_group`;
 export const ReadBatch = `/message/read_batch`;
 export const Read_batch_by_sendIdAndType = `/message/read_batch_by_sendIdAndType`;
 export const GetUnreadList = `/user_cache/get_unreadList`;
+
+// friends
+export const AddFriends = `/friends/add_friends`;
+export const RemoveFriends = `/friends/remove_friends`;
+export const ListMyFriends = `/friends/listMyFriends`;
+export const ListCommonFriends = `/friends/listCommonFriends`;

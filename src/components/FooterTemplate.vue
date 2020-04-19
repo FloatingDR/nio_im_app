@@ -5,8 +5,15 @@
                 safe-area-inset-bottom>
         <van-tabbar-item v-for="(item,index) in tabbars"
                          :key="index"
-                         :icon="item.icon"
-                         :info="item.info">{{item.tag}}
+                         :info="item.info"
+                         @click="tab(index,item.url)">
+            <span style="float: bottom">{{item.tag}}</span>
+            <van-icon class="iconfont"
+                      size=".6rem"
+                      class-prefix='icon' slot="icon"
+                      slot-scope="props"
+                      :name='props.active ? item.active:item.normal'>
+            </van-icon>
         </van-tabbar-item>
     </van-tabbar>
 </template>
@@ -17,27 +24,42 @@
         data() {
             return {
                 active: 0,
+                currentIndex: 0,
                 messageInfo: "99+",
                 addressBookInfo: "5",
                 tabbars: [
                     {
-                        icon: "wechat",
+                        normal: "iconfont icondkw_xiaoxi",
+                        active: "iconfont iconxiaoxi2",
                         info: "",
                         tag: "消息",
+                        url: '/index/message',
                     },
                     {
-                        icon: "friends",
+                        normal: "iconfont iconlianxirenweixuanzhong",
+                        active: "iconfont iconlianxirenxuanzhong",
                         info: "",
                         tag: "联系人",
+                        url: '/index/friends',
                     },
                     {
-                        icon: "setting-o",
+                        normal: "iconfont iconxingxing3",
+                        active: "iconfont iconxingxing2",
                         info: "",
-                        tag: "动态",
+                        tag: "设置",
+                        url: '/index/setting',
                     }
                 ]
             }
-        }
+        },
+        methods: {
+            tab(index, url) {
+                if (index !== this.currentIndex) {
+                    this.$router.push(url);
+                    this.currentIndex = index;
+                }
+            }
+        },
     }
 </script>
 

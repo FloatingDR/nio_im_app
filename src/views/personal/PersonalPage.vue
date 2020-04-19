@@ -63,6 +63,11 @@
                 </van-col>
             </van-row>
         </div>
+
+        <div class="footer" v-if="showAddFriend">
+            <van-button round size="normal" color="#19c5ff" type="info" style="width: 90%" @click="addFriend">加好友
+            </van-button>
+        </div>
     </div>
 </template>
 
@@ -70,6 +75,7 @@
     import {ImagePreview} from 'vant';
     import {mapActions, mapGetters} from "vuex";
     import USER from "@/api/user";
+    import FRIENDS from "@/api/friends";
 
     export default {
         name: "PersonalPage",
@@ -98,6 +104,7 @@
                     "img": "",
                     "backgroundImg": "",
                 },
+                showAddFriend: false,
             }
         },
         methods: {
@@ -126,6 +133,24 @@
                 }
                 this.resize(this.info.backgroundImg);
                 this.setTags();
+                this.checkIfMyFriends();
+            },
+            checkIfMyFriends() {
+                let that = this;
+                if (that.currentId === that.getMyId()) {
+                    that.showAddFriend = false;
+                    return;
+                }
+                FRIENDS.listMyFriends(that.getMyId()).then(function (resp) {
+                    if (resp.data.status) {
+                        let index = resp.data.data.map(T => {
+                            return T.userId
+                        }).indexOf(that.currentId);
+                        if (index < 0) {
+                            that.showAddFriend = true
+                        }
+                    }
+                }).catch(err => console.log(err))
             },
             /**
              * 设置个性标签
@@ -157,7 +182,7 @@
                 }
                 if (info.zodiac) {
                     tags.push({
-                        tag: '属'+info.zodiac,
+                        tag: '属' + info.zodiac,
                         color: this.color[index]
                     });
                     index++;
@@ -212,6 +237,23 @@
                     query: {userId: this.currentId}
                 });
             },
+            addFriend() {
+                let that = this;
+                // console.log(this.getMyId(),this.currentId)
+                FRIENDS.addFriends(this.getMyId(), this.currentId).then(function (resp) {
+                    if (resp.data.status) {
+                        that.$message({
+                            message: '添加成功，快来和朋友一起聊天吧！',
+                            type: 'success'
+                        });
+                    } else {
+                        that.$message({
+                            message: '添加失败！',
+                            type: 'warning'
+                        });
+                    }
+                }).catch(err => console.log(err));
+            }
 
         },
         mounted() {
@@ -238,5 +280,13 @@
         color: #707070;
         width: 100%;
         margin-top: .8rem;
+    }
+
+    .footer {
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        padding-bottom: .3rem;
+        padding-top: .3rem;
     }
 </style>

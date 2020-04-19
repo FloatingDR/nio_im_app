@@ -42,6 +42,15 @@ export default new Vuex.Store({
             let string = sessionStorage.getItem("chatting");
             state.chatting = JSON.parse(string);
             return state.chatting;
+        },
+        // 获取登录状态
+        getIsLoginEd(state) {
+            let flag = false;
+            if (localStorage.getItem('isLoginEd') === 'true') {
+                flag = true;
+            }
+            state.isLoginEd = flag;
+            return state.isLoginEd;
         }
     },
     mutations: {
@@ -53,6 +62,7 @@ export default new Vuex.Store({
         },
         Set_LoginState: (state, loginEd) => {
             state.isLoginEd = loginEd;
+            localStorage.setItem('isLoginEd', loginEd);
         },
         Set_ViewingId(state, userId) {
             state.viewingId = Number.parseInt(userId);
@@ -66,16 +76,23 @@ export default new Vuex.Store({
         }
     },
     actions: {
+        SetLoginOutState({commit}){
+            commit('Set_LoginState', 'false');
+        },
+        SetLoginState({commit}){
+            commit('Set_LoginState', 'true');
+        },
         // 登录的时候设置缓存
         LoginAction({commit}, user) {
             commit('CACHE', user);
-            commit('Set_LoginState', true);
+            commit('Set_LoginState', 'true');
             sessionStorage.setItem('Authorization', user.userId);
         },
         // 退出登录的时候，清理缓存
         LogoutAction({commit}) {
+            console.log("login out!");
             localStorage.removeItem('userCache');
-            commit('Set_LoginState', false)
+            commit('Set_LoginState', 'false');
         },
         // 设置当前浏览用户id
         SET_VIEWING_ID({commit}, userId) {
