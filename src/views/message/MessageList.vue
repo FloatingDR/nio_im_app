@@ -54,6 +54,7 @@
     import MESSAGE from "@/api/Message";
     import CACHE from "@/api/cache";
     import SearchTemplate from "@/components/SearchTemplate";
+    import USER from "@/api/user";
 
     export default {
         name: "MessageList",
@@ -108,9 +109,22 @@
                                 msg: JSON.parse(cache[i].message).data,
                             };
                             that.format(that.list, i, msg);
+                            that.update(that.list, i);
                         }
                     }
                 }).catch(err => console.log(err));
+            },
+            // 更新用户名/头像
+            update(list, index) {
+                let that = this;
+                USER.getUserById(list[index].sendId).then(function (resp) {
+                    if (resp.data.status) {
+                        list[index].img = resp.data.data.imgReduce;
+                        that.$set(list, index, list[index]);
+                    }
+                }).catch((err) => {
+                    console.log(err);
+                });
             },
             // 格式化数据用于显示
             format(list, index, data) {
