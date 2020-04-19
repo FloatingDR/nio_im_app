@@ -5,14 +5,8 @@
                   :finished="finished"
                   :finished-text="finishedText"
                   @load="onLoad">
-            <van-search
-                    style="width: 100%;border-radius: 1rem"
-                    shape="round"
-                    disabled
-                    placeholder="搜索"
-                    input-align="center"
-                    @click="search()">
-            </van-search>
+
+            <SearchTemplate/>
 
             <!--  消息列表-->
             <van-cell class="van_cell" v-for="item in list" :key="item.index"
@@ -35,7 +29,7 @@
                             <span style="float:right;margin-right: .4rem;color: #a3a3a3;font-size: .35rem">{{item.time}}</span>
                         </div>
                         <div>
-                            <span style="color: #a3a3a3;font-size: .35rem">{{item.msg}}</span>
+                            <!--                            <span style="color: #a3a3a3;font-size: .35rem">{{item.msg}}</span>-->
                             <div v-if="item.count > 0 " style="float:right;width:.5rem;height:.5rem;border-radius:.25rem;
                             background-color: crimson;line-height: .5rem;color: white;text-align: center;margin-right: .4rem;
                             font-size: .1rem">
@@ -45,7 +39,7 @@
                     </div>
                     <!--  左滑插槽-->
                     <template slot="right">
-                        <van-button type="danger" @click="deleteMsg(item.index)">删除</van-button>
+                        <van-button type="danger" @click="deleteMsg(item.index)">清空聊天记录</van-button>
                     </template>
                 </van-swipe-cell>
             </van-cell>
@@ -59,9 +53,11 @@
     import {mapActions} from "vuex";
     import MESSAGE from "@/api/Message";
     import CACHE from "@/api/cache";
+    import SearchTemplate from "@/components/SearchTemplate";
 
     export default {
         name: "MessageList",
+        components: {SearchTemplate},
         data() {
             return {
                 count: 0,
@@ -171,14 +167,14 @@
              * 删除指定index的元素
              */
             deleteMsg(index) {
-                console.log("将删除的元素:", index);
-                let list = this.list;
-                // let id = list[index].id;
-                // let type = list[index].type;
+                let id = CACHE.getMyId();
+                let sendId = this.list[index].sendId;
+                let type = this.list[index].type;
                 // MsgList.deleteAll(id, type);
                 // list.splice(index, 1);
+                CACHE.deleteCache(id, sendId, type);
                 // resize
-                this.resize(list);
+                this.resize(this.list);
             }
             ,
             /**
@@ -206,7 +202,7 @@
                         console.log("动态设置space_div高度为" + height);
                         space.style.height = height + 'px';
                     } else {
-                        let height = document.getElementById("app").clientHeight;
+                        let height = (document.getElementById("app").clientHeight / 10) * 7;
                         space.style.height = height + 'px';
                     }
 
@@ -227,13 +223,6 @@
                     this.SET_CHATTING({id: id, type: 'group'});
                 }
                 this.readList(id, type);
-            }
-            ,
-            /**
-             * 跳转到搜索页
-             */
-            search() {
-                this.$router.push({path: '/search'});
             },
             /**
              * 已读列表
@@ -272,7 +261,11 @@
 
 <style scoped>
     .pullDiv {
+        margin: 0;
+        padding: 0;
         width: 100%;
+        height: 17.9rem;
+        overflow: scroll;
         float: left;
     }
 </style>

@@ -97,6 +97,7 @@
 
                 CACHE.getCache(this.myInfo.userId, this.otherInfo.userId, 'CHAT').then(function (resp) {
                     if (resp.data.status) {
+                        // console.log(resp.data.data);
                         // process
                         let arr = resp.data.data;
                         if (arr != null && arr.length > 0) {
@@ -106,7 +107,8 @@
                         }
                     }
                 }).catch(err => console.log(err));
-                // this.readList(this.otherInfo.userId, 'CHAT');
+
+                this.readList(this.otherInfo.userId, 'CHAT');
             },
             // 处理缓存数据
             processCache(list, index, data) {
@@ -133,7 +135,11 @@
                     content: data,
                 };
                 this.messages.push(msg);
-                CACHE.cacheMsg(myId, receiveId, 'CHAT', msg);
+                CACHE.cacheMsg(myId, receiveId, 'CHAT', msg).then(function (resp) {
+                    if (resp.data.status) {
+                        console.log(resp.data.data);
+                    }
+                }).catch(err => console.log(err));
 
                 let chat = {
                     header: {
@@ -168,11 +174,12 @@
         },
         computed: {
             onActive() {
-                return this.$websocket.state.eventList;
+                return this.$websocket.state.chatList;
             },
         },
         watch: {
             onActive: function () {
+                console.log("监听到新数据");
                 this.initData();
             },
             // 设置滚动条拉到最底
@@ -193,7 +200,7 @@
     }
 
     .space_div {
-        height: 1.65rem;
+        height: 2rem;
     }
 
     #scroller {

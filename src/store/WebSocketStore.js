@@ -1,13 +1,16 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import CACHE from "@/api/cache";
+import {WS_URL} from "@/api/urls";
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
     state: {
         websocket: null,
+        wsConnected: false,
         eventList: [],
+        chatList: [],
     },
     getters: {
         onEvent(state) {
@@ -28,48 +31,10 @@ export default new Vuex.Store({
     },
     mutations: {
         // websocket 初始化
-        WS_INIT(state, url) {
-            if (!window.WebSocket) {
-                window.WebSocket = window.MozWebSocket;
-            }
-            if (window.WebSocket) {
-                if (!state.websocket) {
-                    state.websocket = new WebSocket(url);
-                }
-                state.websocket.onopen = function () {
-                    console.log("打开 WebSocket 服务正常，浏览器支持 WebSocket!");
-                    // 发送心跳包
-                    sendPing(this);
-                    // 发送登录信息
-                    sendLogin(this);
-                };
-                state.websocket.onmessage = function (event) {
-                    let data = JSON.parse(event.data);
-                    if (data.header.msgType === "PANG") {
-                        // ping 返回 25S定时
-                        let sc = this;
-                        setInterval(function () {
-                            console.log("客户端发送心跳！");
-                            sendPing(sc);
-                        }, 25000);
-                    } else {
-                        state.eventList.push({
-                            method: 'RECEIVED_DATA',
-                            data: data
-                        });
-                    }
-                };
-                state.websocket.onerror = function (err) {
-                    state.websocket.close();
-                    console.log(err);
-                };
-                state.websocket.onclose = function () {
-                    console.log("WebSocket关闭");
-                };
-            } else {
-                console.log("抱歉，您的浏览器不支持 WebSocket 协议！");
-            }
+        WS_INIT(state) {
+            INIT(state);
         },
+
         WS_SEND_CHAT(state, {receiverId, data}) {
             if (!window.WebSocket) {
                 return;
@@ -105,6 +70,63 @@ export default new Vuex.Store({
     }
 })
 
+// 初始化ws连接
+function INIT(state) {
+    let url = WS_URL;
+    if (!window.WebSocket) {
+        window.WebSocket = window.MozWebSocket;
+    }
+    if (window.WebSocket) {
+        if (!state.websocket) {
+            state.websocket = new WebSocket(url);
+        }
+        state.websocket.onopen = function () {
+            console.log("打开 WebSocket 服务正常，浏览器支持 WebSocket!");
+            state.wsConnected = true;
+            // 发送心跳包
+            sendPing(this);
+            // 发送登录信息
+            sendLogin(this);
+        };
+        state.websocket.onmessage = function (event) {
+            let data = JSON.parse(event.data);
+            if (data.header.msgType === "PANG") {
+                // ping 返回 25S定时
+                let sc = this;
+                setInterval(function () {
+                    console.log("客户端发送心跳！");
+                    sendPing(sc);
+                }, 25000);
+            } else {
+                state.eventList.push({
+                    method: 'RECEIVED_DATA',
+                    data: data
+                });
+            }
+        };
+        state.websocket.onerror = function (err) {
+            state.websocket.close();
+            console.log(err);
+        };
+        // 断线重连
+        state.websocket.onclose = function () {
+            console.log("WebSocket关闭");
+            state.websocket = null;
+            state.wsConnected = false;
+            if (!state.wsConnected) {
+                setTimeout(function () {
+                    if (!state.wsConnected) {
+                        console.log('尝试重连...');
+                        INIT(state);
+                    }
+                }, 5000);
+            }
+        };
+    } else {
+        console.log("抱歉，您的浏览器不支持 WebSocket 协议！");
+    }
+}
+
 // 发送消息
 function send(socket, message) {
     if (!window.WebSocket) {
@@ -113,7 +135,7 @@ function send(socket, message) {
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(message);
     } else {
-        alert("WebSocket 连接没有建立成功！");
+        console.log("WebSocket 连接没有建立成功！");
     }
 }
 

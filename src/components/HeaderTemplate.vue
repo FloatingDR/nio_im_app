@@ -12,11 +12,11 @@
                                    :src="userImg"
                                    @click="toPersonalPage">
                         </van-image>
-                        <van-icon v-if="$route.meta.goBack" name="arrow-left" :size="searchSize"
+                        <van-icon v-if="$route.meta.goBack||showBack" name="arrow-left" :size="searchSize"
                                   @click="goBack"/>
                     </van-col>
                     <van-col span="14">
-                        <span class="tag">{{tag}}</span>
+                        <span class="tag">{{$route.meta.tag||tag}}</span>
                     </van-col>
                     <van-col span="5">
                         <van-icon v-if="$route.meta.showMore" name="plus" :size="searchSize" @click="more"/>
@@ -38,6 +38,7 @@
         name: "HeaderTemplate",
         props: {
             tag: String,
+            showBack: Boolean,
         },
         data() {
             return {
@@ -49,11 +50,14 @@
             }
         },
         methods: {
-            ...mapActions(['SET_VIEWING_ID']),
+            ...mapActions(['SET_VIEWING_ID', 'SetLoginState']),
             ...mapGetters(['getUserCache', 'getMyId', 'getViewingId']),
             initData() {
                 let cache = this.getUserCache();
-                this.userImg = cache.imgReduce;
+                if (cache) {
+                    this.userImg = cache.imgReduce;
+                }
+                this.NET_NOCONNECTION = !this.$websocket.state.wsConnected
             },
             // 点击头像，跳转到我的主页
             toPersonalPage() {
@@ -72,6 +76,7 @@
              */
             goBack() {
                 this.$router.goBack();
+                this.SetLoginState();
             },
             /**
              * 聊天信息
@@ -82,11 +87,21 @@
 
             }
         },
-        created(){
+        created() {
             this.initData();
         },
         mounted() {
 
+        },
+        computed: {
+            onNetError() {
+                return this.$websocket.state.wsConnected;
+            }
+        },
+        watch: {
+            onNetError: function () {
+                this.NET_NOCONNECTION = !this.$websocket.state.wsConnected
+            },
         }
     }
 </script>
@@ -109,6 +124,7 @@
     /*}*/
 
     .van_row {
+        overflow: hidden;
     }
 
     .tag {

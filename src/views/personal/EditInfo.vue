@@ -134,7 +134,9 @@
                 that.info = that.getUserCache();
                 // 更新生日组件
                 let date = that.info.birthday;
-                that.info.birthday = date.split(" ")[0];
+                if(date){
+                    that.info.birthday = date.split(" ")[0];
+                }
                 that.currentDate = new Date(that.info.birthday);
             },
             formatter(type, val) {
@@ -176,7 +178,7 @@
                     date += month + '-';
                 }
                 if (day < 10) {
-                    date += '0' + day + '-';
+                    date += '0' + day;
                 } else {
                     date += day;
                 }
@@ -185,6 +187,7 @@
                     'birthday': date,
                 };
                 let that = this;
+                console.log(user);
                 USER.updateUserInfo(info.userId, user).then(function (resp) {
                     if (resp.data.status) {
                         let date = resp.data.data.birthday;

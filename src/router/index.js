@@ -7,7 +7,13 @@ import Search from "@/views/search/Search";
 import Info from "@/views/personal/Info";
 import EditInfo from "@/views/personal/EditInfo";
 import ChildEditPage from "@/views/personal/ChildEditPage";
-import Test from "@/Test";
+import Friends from "@/views/friends/Friends";
+import Layout from "@/components/Layout";
+import HeaderTemplate from "@/components/HeaderTemplate";
+import FooterTemplate from "@/components/FooterTemplate";
+import Login from "@/views/login/Login";
+import Register from "@/views/register/Register";
+import Setting from '@/views/setting/Setting'
 
 Vue.use(VueRouter);
 
@@ -15,17 +21,55 @@ const routes = [
     {
         path: '/',
         name: 'login',
-        component: Test,
+        component: Login,
     },
     {
-        path: '/message',
-        name: 'Message',
-        component: Message,
-        meta: {
-            showHeaderImg: true,
-            showMore: true,
-            showFooter: true,
-        }
+        path: '/index',
+        name: 'index',
+        component: Layout,
+        children: [
+            {
+                path: 'message',
+                name: 'Message',
+                components: {
+                    'header': HeaderTemplate,
+                    'main': Message,
+                    'footer': FooterTemplate,
+                },
+                meta: {
+                    tag: '消息',
+                    showHeaderImg: true,
+                    showMore: true,
+                    showFooter: true,
+                }
+            },
+            {
+                path: 'friends',
+                components: {
+                    'header': HeaderTemplate,
+                    'main': Friends,
+                    'footer': FooterTemplate,
+                },
+                meta: {
+                    tag: '联系人',
+                    showFooter: true,
+                }
+            },
+            {
+                path: 'setting',
+                name: 'setting',
+                components: {
+                    'header': HeaderTemplate,
+                    'main': Setting,
+                    'footer': FooterTemplate,
+                },
+                meta:{
+                    tag: '设置',
+                    showFooter: true,
+                }
+            },
+        ],
+
     },
     {
         path: '/personalPage',
@@ -72,7 +116,12 @@ const routes = [
         meta: {
             goBack: true,
         }
-    }
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: Register,
+    },
 
 ];
 

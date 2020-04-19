@@ -3,12 +3,16 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import websocket from './store/WebSocketStore'
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+import '@/assets/icon/iconfont.css';
 
 import {
     Tabbar, TabbarItem, Icon, Col, Row, Lazyload, Image, PullRefresh,
     List, Cell, Search, Sticky, Skeleton, SwipeCell, Button, Card, Notify, NoticeBar
     , Loading, Tag, ImagePreview, CellGroup, DatetimePicker, Popup, Radio, RadioGroup
-    , Picker, Field, Area, Uploader, Toast,Form
+    , Picker, Field, Area, Uploader, Toast, Form, IndexBar, IndexAnchor, Collapse,
+    CollapseItem
 }
     from 'vant';
 
@@ -17,10 +21,12 @@ Vue.use(Tabbar).use(TabbarItem).use(Icon).use(Col).use(Row).use(Lazyload)
     .use(Skeleton).use(SwipeCell).use(Button).use(Card).use(Notify).use(NoticeBar)
     .use(Loading).use(Tag).use(ImagePreview).use(CellGroup).use(DatetimePicker)
     .use(Popup).use(Radio).use(RadioGroup).use(Picker).use(Field).use(Area)
-    .use(Uploader).use(Toast).use(Form);
+    .use(Uploader).use(Toast).use(Form).use(IndexBar).use(IndexAnchor).use(Collapse)
+    .use(CollapseItem);
 
 Vue.config.productionTip = false;
 Vue.prototype.$websocket = websocket;
+Vue.use(ElementUI);
 
 new Vue({
     router,
